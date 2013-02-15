@@ -56,6 +56,7 @@ placeholderImage:(UIImage *)placeholderImage
 
 - (void) setURL:(NSURL*)url;
 - (void) setURL:(NSURL*)url withPreset:(WTURLImageViewPreset*) preset;
+- (void) reloadWithPreset : (WTURLImageViewPreset*)preset;
 
 @property (nonatomic, weak) id <WTURLImageViewDelegate> delegate;
 @property (nonatomic, copy) NSString *urlString;    // will store this only when WTURLImageViewOptionRecordURLString is set
