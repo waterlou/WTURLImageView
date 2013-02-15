@@ -17,6 +17,7 @@ typedef NS_OPTIONS(NSUInteger, WTURLImageViewOptions) {
     WTURLImageViewOptionShowActivityIndicator = 1 << 3, // show activity indicator when loading
     WTURLImageViewOptionAnimateEvenCache = 1 << 4,      // by default no animation for cache image, force if set this
     WTURLImageViewOptionDontClearImageBeforeLoading = 1 << 5,    // will not clear old image when loading
+    WTURLImageViewOptionRecordURLString           = 1 << 6,    // set this flag so that user can get the url of the image
     // transition effects
     WTURLImageViewOptionTransitionNone            = 0 << 20, // default
     WTURLImageViewOptionTransitionCrossDissolve   = 1 << 20,
@@ -57,6 +58,7 @@ placeholderImage:(UIImage *)placeholderImage
 - (void) setURL:(NSURL*)url withPreset:(WTURLImageViewPreset*) preset;
 
 @property (nonatomic, weak) id <WTURLImageViewDelegate> delegate;
+@property (nonatomic, copy) NSString *urlString;    // will store this only when WTURLImageViewOptionRecordURLString is set
 
 - (UIActivityIndicatorView *) activityIndicator;
 

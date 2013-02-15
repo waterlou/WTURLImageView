@@ -136,6 +136,8 @@
 {
     [self cancelImageRequestOperation];
     
+    if (options & WTURLImageViewOptionRecordURLString)
+        self.urlString = urlRequest.URL.absoluteString;
     NSString *cacheKey = [self sanitizeFileNameString: urlRequest.URL.absoluteString];
     
     if (!(options & WTURLImageViewOptionDontUseCache)) {
@@ -212,6 +214,10 @@ placeholderImage:preset.placeholderImage
      failedImage:preset.failedImage];
 }
 
+- (void) reloadWithPreset : (WTURLImageViewPreset*)preset
+{
+    [self setURL: [NSURL URLWithString:self.urlString] withPreset: preset];
+}
 
 #pragma mark touch event
 
