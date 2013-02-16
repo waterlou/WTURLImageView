@@ -231,7 +231,12 @@ placeholderImage:preset.placeholderImage
 
 - (void) reloadWithPreset : (WTURLImageViewPreset*)preset
 {
-    [self setURL: [NSURL URLWithString:self.urlString] withPreset: preset];
+    [self setURL:[NSURL URLWithString:self.urlString]
+        fillType:preset.fillType
+         options:(preset.options & ~WTURLImageViewOptionDontUseCache)   // mask out cache
+placeholderImage:preset.placeholderImage
+     failedImage:preset.failedImage
+diskCacheTimeoutInterval:preset.diskCacheTimeInterval];
 }
 
 #pragma mark touch event
