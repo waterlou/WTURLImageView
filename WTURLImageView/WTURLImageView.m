@@ -13,6 +13,9 @@
 
 #define kAIVTag 2222    // activity indicator tag
 
+static NSTimeInterval defaultTimeoutInterval = 60;  // default time out at 60 seconds
+static NSTimeInterval defaultDiskCacheTimeoutInterval = 86400;
+
 @interface WTURLImageView()
 
 @property (nonatomic, strong) AFHTTPRequestOperation *requestOperation;
@@ -39,7 +42,7 @@
     dispatch_once(&onceToken, ^{
         NSString *path = [NSTemporaryDirectory() stringByAppendingPathComponent: @"WTLURLImageView"];
         sharedCache = [[GVCache alloc] initWithCacheDirectory:path];
-        [sharedCache setDefaultTimeoutInterval: 86400];
+        [sharedCache setDefaultTimeoutInterval: defaultDiskCacheTimeoutInterval];
     });
     
     return sharedCache;
@@ -131,16 +134,16 @@
               options:(WTURLImageViewOptions)options
      placeholderImage:(UIImage *)placeholderImage
           failedImage:(UIImage *)failedImage
+diskCacheTimeoutInterval:(NSTimeInterval)diskCacheTimeInterval  // set to 0 will use default one
               success:(void (^)(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image))success
               failure:(void (^)(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error))failure
 {
     [self cancelImageRequestOperation];
     
-    if (options & WTURLImageViewOptionRecordURLString)
-        self.urlString = urlRequest.URL.absoluteString;
-    NSString *cacheKey = [self sanitizeFileNameString: urlRequest.URL.absoluteString];
+    self.urlString = urlRequest.URL.absoluteString; // record urlstring for reload
+    NSString *cacheKey = [self sanitizeFileNameString: self.urlString];
     
-    if (!(options & WTURLImageViewOptionDontUseCache)) {
+    if (!(options & WTURLImageViewOptionDontUseDiskCache)) {
         UIImage *cachedImage = [[[self class] sharedImageCache] imageForKey:cacheKey];
         if (cachedImage) {
             if (options & WTURLImageViewOptionAnimateEvenCache) {
@@ -164,8 +167,15 @@
         if ([[urlRequest URL] isEqual:[[self.requestOperation request] URL]]) {
             [self endLoadImage:responseObject fromCache:NO fillType:fillType options:options failedImage:failedImage];
             if (success) success(operation.request, operation.response, responseObject);
-            if (!(options & WTURLImageViewOptionDontSaveCache)) {
-                [[[self class] sharedImageCache] setImage:responseObject forKey:cacheKey];
+            if (!(options & WTURLImageViewOptionDontSaveDiskCache)) {
+                GVCache *cache = [[self class] sharedImageCache];
+                [cache setImage:responseObject forKey:cacheKey];
+                if (diskCacheTimeInterval>0) {
+                    [cache setImage:responseObject forKey:cacheKey withTimeoutInterval:diskCacheTimeInterval];
+                }
+                else {
+                    [cache setImage:responseObject forKey:cacheKey];
+                }
             }
             self.requestOperation = nil;
         }
@@ -176,7 +186,7 @@
             self.requestOperation = nil;
         }
     }];
-    if (options & WTURLImageViewOptionDontUseCache) {
+    if (options & WTURLImageViewOptionDontUseConnectionCache) {
         [requestOperation setCacheResponseBlock:^NSCachedURLResponse *(NSURLConnection *connection, NSCachedURLResponse *cachedResponse) {
             // we also disable cache in afnetworking
             return nil;
@@ -192,8 +202,11 @@
        options:(WTURLImageViewOptions)options
 placeholderImage:(UIImage *)placeholderImage
    failedImage:(UIImage *)failedImage
+diskCacheTimeoutInterval:(NSTimeInterval)diskCacheTimeInterval  // set to 0 will use default one
 {
-    [self setURLRequest:[NSURLRequest requestWithURL:url] fillType:fillType options:options placeholderImage:placeholderImage failedImage:failedImage success:nil failure:nil];
+    NSURLRequestCachePolicy cachePolicy = (options & WTURLImageViewOptionDontUseConnectionCache) ? NSURLRequestReloadIgnoringCacheData : NSURLRequestUseProtocolCachePolicy;
+    NSURLRequest *request = [[NSURLRequest alloc] initWithURL: url cachePolicy:cachePolicy timeoutInterval:defaultTimeoutInterval];
+    [self setURLRequest:request fillType:fillType options:options placeholderImage:placeholderImage failedImage:failedImage diskCacheTimeoutInterval:diskCacheTimeInterval success:nil failure:nil];
 }
 
 - (void) setURL:(NSURL*)url
@@ -202,7 +215,8 @@ placeholderImage:(UIImage *)placeholderImage
         fillType:UIImageResizeFillTypeFillIn
          options:0
 placeholderImage:nil
-     failedImage:nil];
+     failedImage:nil
+diskCacheTimeoutInterval:0];
 }
 
 - (void) setURL:(NSURL*)url withPreset:(WTURLImageViewPreset*) preset
@@ -211,7 +225,8 @@ placeholderImage:nil
         fillType:preset.fillType
          options:preset.options
 placeholderImage:preset.placeholderImage
-     failedImage:preset.failedImage];
+     failedImage:preset.failedImage
+     diskCacheTimeoutInterval:preset.diskCacheTimeInterval];
 }
 
 - (void) reloadWithPreset : (WTURLImageViewPreset*)preset
@@ -305,7 +320,6 @@ placeholderImage:preset.placeholderImage
             // have sublayer means animation in progress
             NSArray *sublayer = self.layer.sublayers;
             BOOL clipsToBoundsSave = NO;
-            NSLog(@"layers %d", sublayer.count);
             if (sublayer.count==1)
                 self.clipsToBoundsSave = self.clipsToBounds;
             self.clipsToBounds = YES;
@@ -352,6 +366,10 @@ placeholderImage:preset.placeholderImage
     [[[self class] sharedImageCache] clearCache];
 }
 
++ (void) setDiskCacheDefaultTimeOutInterval : (NSTimeInterval) timeout
+{
+    [[[self class] sharedImageCache] setDefaultTimeoutInterval: timeout];
+}
 
 @end
 

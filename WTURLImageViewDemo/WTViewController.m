@@ -72,9 +72,9 @@
     WTURLImageViewPreset *preset = [WTURLImageViewPreset defaultPreset];
     WTURLImageViewOptions options = preset.options;
     if (sender.isOn)
-        options &= ~ (WTURLImageViewOptionDontSaveCache | WTURLImageViewOptionDontUseCache);
+        options &= ~ (WTURLImageViewOptionDontSaveDiskCache | WTURLImageViewOptionDontUseCache);
     else
-        options |= (WTURLImageViewOptionDontSaveCache | WTURLImageViewOptionDontUseCache);
+        options |= (WTURLImageViewOptionDontSaveDiskCache | WTURLImageViewOptionDontUseCache);
     preset.options = options;
     [self doLoadImage: nil];
 }

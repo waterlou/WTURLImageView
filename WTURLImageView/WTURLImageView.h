@@ -12,12 +12,13 @@
 #define UIImageResizeFillTypeIgnoreNoResize (99)
 
 typedef NS_OPTIONS(NSUInteger, WTURLImageViewOptions) {
-    WTURLImageViewOptionDontUseCache = 1 << 0,  // dont use disk cache
-    WTURLImageViewOptionDontSaveCache = 1 << 2, // dont save to disk cache
+    WTURLImageViewOptionDontUseDiskCache = 1 << 0,  // dont use disk cache
+    WTURLImageViewOptionDontUseConnectionCache = 1 << 1,  // dont use system wide cache
+    WTURLImageViewOptionDontUseCache = (WTURLImageViewOptionDontUseDiskCache | WTURLImageViewOptionDontUseConnectionCache),
+    WTURLImageViewOptionDontSaveDiskCache = 1 << 2, // dont save to disk cache
     WTURLImageViewOptionShowActivityIndicator = 1 << 3, // show activity indicator when loading
     WTURLImageViewOptionAnimateEvenCache = 1 << 4,      // by default no animation for cache image, force if set this
     WTURLImageViewOptionDontClearImageBeforeLoading = 1 << 5,    // will not clear old image when loading
-    WTURLImageViewOptionRecordURLString           = 1 << 6,    // set this flag so that user can get the url of the image
     // transition effects
     WTURLImageViewOptionTransitionNone            = 0 << 20, // default
     WTURLImageViewOptionTransitionCrossDissolve   = 1 << 20,
@@ -45,6 +46,7 @@ typedef NS_OPTIONS(NSUInteger, WTURLImageViewOptions) {
               options:(WTURLImageViewOptions)options
      placeholderImage:(UIImage *)placeholderImage
           failedImage:(UIImage *)failedImage
+diskCacheTimeoutInterval:(NSTimeInterval)diskCacheTimeInterval  // set to 0 will use default one
               success:(void (^)(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image))success
               failure:(void (^)(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error))failure;
 
@@ -52,7 +54,8 @@ typedef NS_OPTIONS(NSUInteger, WTURLImageViewOptions) {
       fillType:(UIImageResizeFillType)fillType
        options:(WTURLImageViewOptions)options
 placeholderImage:(UIImage *)placeholderImage
-   failedImage:(UIImage *)failedImage;
+   failedImage:(UIImage *)failedImage
+diskCacheTimeoutInterval:(NSTimeInterval)diskCacheTimeInterval;  // set to 0 will use default one
 
 - (void) setURL:(NSURL*)url;
 - (void) setURL:(NSURL*)url withPreset:(WTURLImageViewPreset*) preset;
@@ -69,6 +72,9 @@ placeholderImage:(UIImage *)placeholderImage
 /* limit max number of download concurrently */
 + (void) setMaxConcurrentDownload : (NSInteger) c;
 
+/* set the default expiry interval for disk cache */
++ (void) setDiskCacheDefaultTimeOutInterval : (NSTimeInterval) timeout;
+
 @end
 
 @interface WTURLImageViewPreset : NSObject
@@ -79,5 +85,6 @@ placeholderImage:(UIImage *)placeholderImage
 @property (nonatomic, assign) WTURLImageViewOptions options;
 @property (nonatomic, strong) UIImage *placeholderImage;
 @property (nonatomic, strong) UIImage *failedImage;
+@property (nonatomic, assign) NSTimeInterval diskCacheTimeInterval;
 
 @end
