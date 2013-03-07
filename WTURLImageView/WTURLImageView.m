@@ -48,6 +48,12 @@ static NSTimeInterval defaultDiskCacheTimeoutInterval = 86400;
     return sharedCache;
 }
 
++ (UIImage*) getCachedImageByUrlString : (NSString*) urlString
+{
+    NSString *cacheKey = [[self class] sanitizeFileNameString: urlString];
+    return [[[self class] sharedImageCache] imageForKey:cacheKey];
+}
+
 + (NSOperationQueue *) sharedImageRequestOperationQueue {
     static NSOperationQueue *imageRequestOperationQueue = nil;
     static dispatch_once_t onceToken;
@@ -69,7 +75,7 @@ static NSTimeInterval defaultDiskCacheTimeoutInterval = 86400;
     [self cancelImageRequestOperation];
 }
 
-- (NSString *)sanitizeFileNameString:(NSString *)fileName {
++ (NSString *)sanitizeFileNameString:(NSString *)fileName {
     NSCharacterSet* illegalFileNameCharacters = [NSCharacterSet characterSetWithCharactersInString:@"/\\?%*|\"<>"];
     return [[fileName componentsSeparatedByCharactersInSet:illegalFileNameCharacters] componentsJoinedByString:@"_"];
 }
@@ -141,7 +147,7 @@ diskCacheTimeoutInterval:(NSTimeInterval)diskCacheTimeInterval  // set to 0 will
     [self cancelImageRequestOperation];
     
     self.urlString = urlRequest.URL.absoluteString; // record urlstring for reload
-    NSString *cacheKey = [self sanitizeFileNameString: self.urlString];
+    NSString *cacheKey = [[self class] sanitizeFileNameString: self.urlString];
     
     if (!(options & WTURLImageViewOptionDontUseDiskCache)) {
         UIImage *cachedImage = [[[self class] sharedImageCache] imageForKey:cacheKey];

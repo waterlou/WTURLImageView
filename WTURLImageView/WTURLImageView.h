@@ -69,6 +69,8 @@ diskCacheTimeoutInterval:(NSTimeInterval)diskCacheTimeInterval;  // set to 0 wil
 /* clear all cache, for invalidate cache */
 + (void) clearAllCache;
 
++ (UIImage*) getCachedImageByUrlString : (NSString*) urlString;
+
 /* limit max number of download concurrently */
 + (void) setMaxConcurrentDownload : (NSInteger) c;
 
