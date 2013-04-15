@@ -186,6 +186,9 @@ diskCacheTimeoutInterval:(NSTimeInterval)diskCacheTimeInterval  // set to 0 will
             self.requestOperation = nil;
         }
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        if (error.code==NSURLErrorCancelled) {
+            return; // manual cancel
+        }
         if ([[urlRequest URL] isEqual:[[self.requestOperation request] URL]]) {
             [self endLoadImage:nil fromCache:NO fillType:fillType options:options failedImage:failedImage];
             if (failure) failure(operation.request, operation.response, error);
