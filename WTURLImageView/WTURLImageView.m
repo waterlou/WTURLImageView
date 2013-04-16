@@ -96,7 +96,7 @@ static NSTimeInterval defaultDiskCacheTimeoutInterval = 86400;
 
 - (void) beginLoadImage : (WTURLImageViewOptions) options placeHolderImage : (UIImage*) placeHolderImage
 {
-    if (!(options & WTURLImageViewOptionDontClearImageBeforeLoading) || self.image==nil)
+    if (options & WTURLImageViewOptionDontClearImageBeforeLoading)
         self.image = placeHolderImage;
     if (options & WTURLImageViewOptionShowActivityIndicator) {
         UIActivityIndicatorView *aiv = [self activityIndicator];
