@@ -150,19 +150,41 @@ diskCacheTimeoutInterval:(NSTimeInterval)diskCacheTimeInterval  // set to 0 will
     NSString *cacheKey = [[self class] sanitizeFileNameString: self.urlString];
     
     if (!(options & WTURLImageViewOptionDontUseDiskCache)) {
-        UIImage *cachedImage = [[[self class] sharedImageCache] imageForKey:cacheKey];
-        if (cachedImage) {
-            if (options & WTURLImageViewOptionAnimateEvenCache) {
+        if (options & WTURLImageViewOptionsLoadDiskCacheInBackground)
+        {
+            GVCache *cache = [[self class] sharedImageCache];
+            if ([cache hasCacheForKey: cacheKey])
+            {
                 [self beginLoadImage:options placeHolderImage:placeholderImage];
-                [self endLoadImage:cachedImage fromCache:YES fillType:fillType options:options failedImage:failedImage];
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                    UIImage *cachedImage = [cache imageForKey:cacheKey];
+                    if (cachedImage) {
+                        dispatch_async(dispatch_get_main_queue(),^{
+                            [self endLoadImage:cachedImage fromCache:YES fillType:fillType options:options failedImage:failedImage];
+                            if (success) success(nil, nil, cachedImage);
+                            self.requestOperation = nil;
+                        });
+                    }
+                });
+                return;
+            }
+        }
+        else
+        {
+            UIImage *cachedImage = [[[self class] sharedImageCache] imageForKey:cacheKey];
+            if (cachedImage) {
+                if (options & WTURLImageViewOptionAnimateEvenCache) {
+                    [self beginLoadImage:options placeHolderImage:placeholderImage];
+                    [self endLoadImage:cachedImage fromCache:YES fillType:fillType options:options failedImage:failedImage];
 
+                }
+                else {
+                    [self endLoadImage:cachedImage fromCache:YES fillType:fillType options:options failedImage:failedImage];
+                }
+                if (success) success(nil, nil, cachedImage);
+                self.requestOperation = nil;
+                return;
             }
-            else {
-                [self endLoadImage:cachedImage fromCache:YES fillType:fillType options:options failedImage:failedImage];
-            }
-            if (success) success(nil, nil, cachedImage);
-            self.requestOperation = nil;
-            return;
         }
     }
     
