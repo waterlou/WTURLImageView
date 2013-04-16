@@ -175,8 +175,10 @@ diskCacheTimeoutInterval:(NSTimeInterval)diskCacheTimeInterval  // set to 0 will
             if (cachedImage) {
                 if (options & WTURLImageViewOptionAnimateEvenCache) {
                     [self beginLoadImage:options placeHolderImage:placeholderImage];
-                    [self endLoadImage:cachedImage fromCache:YES fillType:fillType options:options failedImage:failedImage];
-
+                    dispatch_async(dispatch_get_main_queue(),^{
+                        // perform animation at another tick otherwise will not take effect
+                        [self endLoadImage:cachedImage fromCache:YES fillType:fillType options:options failedImage:failedImage];
+                    });
                 }
                 else {
                     [self endLoadImage:cachedImage fromCache:YES fillType:fillType options:options failedImage:failedImage];
