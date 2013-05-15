@@ -244,12 +244,7 @@ diskCacheTimeoutInterval:(NSTimeInterval)diskCacheTimeInterval  // set to 0 will
 
 - (void) setURL:(NSURL*)url
 {
-    [self setURL:url
-        fillType:UIImageResizeFillTypeFillIn
-         options:0
-placeholderImage:nil
-     failedImage:nil
-diskCacheTimeoutInterval:0];
+    [self setURL:url withPreset:[WTURLImageViewPreset defaultPreset]];
 }
 
 - (void) setURL:(NSURL*)url withPreset:(WTURLImageViewPreset*) preset
@@ -421,6 +416,16 @@ diskCacheTimeoutInterval:preset.diskCacheTimeInterval];
         defaultPreset = [[WTURLImageViewPreset alloc] init];
     });
     return defaultPreset;
+}
+
+- (id) init
+{
+    self = [super init];
+    if (self) {
+        // default fill in
+        _fillType = UIImageResizeFillTypeFillIn;
+    }
+    return self;
 }
 
 @end
