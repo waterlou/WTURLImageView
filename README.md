@@ -1,6 +1,8 @@
 WTURLImageView
 ==============
 
+## Introduction
+
 WTURLImageView is a subclass of UIImageView that load images from Internet using AFNetworking, with the following features
 
 - Auto resize image
@@ -10,7 +12,11 @@ WTURLImageView is a subclass of UIImageView that load images from Internet using
 - Placeholder and failed image
 - Various transition animations when image is loaded
 
-### Usage
+## Video Demo
+
+[![screencast](http://img.youtube.com/vi/8J-VLHzMAvI/0.jpg)](http://www.youtube.com/watch?v=8J-VLHzMAvI)
+
+## Usage
 
 Simplest call:
 
@@ -59,13 +65,13 @@ that all [WTURLImageView setURL:] will use the preset settings.
 
 Check the sample code for details.
 
-### Try the sample code
+## Run the sample code
 
 	git clone https://github.com/waterlou/WTURLImageView.git	
 	cd WTURLImageView	
 	pod install	
 	open WTURLImageViewDemo.xcworkspace
 	
-### License
+## License
 
 These specifications and CocoaPods are available under the [MIT license](http://www.opensource.org/licenses/mit-license.php).
