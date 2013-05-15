@@ -59,6 +59,13 @@ that all [WTURLImageView setURL:] will use the preset settings.
 
 Check the sample code for details.
 
+### Try the sample code
+
+	git clone https://github.com/waterlou/WTURLImageView.git	
+	cd WTURLImageView	
+	pod install	
+	open WTURLImageViewDemo.xcworkspace
+	
 ### License
 
 These specifications and CocoaPods are available under the [MIT license](http://www.opensource.org/licenses/mit-license.php).
