@@ -36,6 +36,10 @@ where you can set different fillType:
 - UIImageResizeFillTypeFillIn
 - UIImageResizeFillTypeFitIn
 - UIImageResizeFillTypeIgnoreAspectRatio
+- UIImageResizeFillTypeNoResize
+
+	The class will not rely on the contentMode to set the aspect ratio of the image.  It will resize to the size of the imageView unless fillType==UIImageResizeFillTypeNoResize.  It is because it is easier to do animation using layer.  So you will find that if you set fillType to UIImageResizeFillTypeNoResize, most transiton animations will not run properly.
+
 
 various options:
 

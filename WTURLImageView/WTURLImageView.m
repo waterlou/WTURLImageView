@@ -30,7 +30,7 @@ static NSTimeInterval defaultDiskCacheTimeoutInterval = 86400;
         // no need to resize
         return image;
     }
-    if (fillType!=UIImageResizeFillTypeIgnoreNoResize)
+    if (fillType!=UIImageResizeFillTypeNoResize)
         return [image resize:self.bounds.size fillType:fillType topLeftCorner:0 topRightCorner:0 bottomRightCorner:0 bottomLeftCorner:0 quality:kCGInterpolationDefault];
     else
         return image;
