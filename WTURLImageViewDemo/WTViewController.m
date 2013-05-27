@@ -83,9 +83,9 @@
     WTURLImageViewPreset *preset = [WTURLImageViewPreset defaultPreset];
     WTURLImageViewOptions options = preset.options;
     if (sender.isOn)
-        options &= ~ (WTURLImageViewOptionShowActivityIndicator);
-    else
         options |= (WTURLImageViewOptionShowActivityIndicator);
+    else
+        options &= ~ (WTURLImageViewOptionShowActivityIndicator);
     preset.options = options;
     [self doLoadImage: nil];
 }
