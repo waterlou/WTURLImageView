@@ -144,6 +144,7 @@ diskCacheTimeoutInterval:(NSTimeInterval)diskCacheTimeInterval  // set to 0 will
               success:(void (^)(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image))success
               failure:(void (^)(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error))failure
 {
+    [self.layer removeAllAnimations];   // cancel all animation before loading
     [self cancelImageRequestOperation];
     
     self.urlString = urlRequest.URL.absoluteString; // record urlstring for reload
@@ -312,13 +313,20 @@ diskCacheTimeoutInterval:preset.diskCacheTimeInterval];
     
     switch (effect) {
         case WTURLImageViewOptionTransitionCrossDissolve:
+        {
+            CATransition *animation = [CATransition animation];
+            [animation setDuration:0.45f];
+            [animation setType:kCATransitionFade];
+            [self.layer addAnimation:animation forKey:@"fade"];
+            self.image = image;
+        } break;
         case WTURLImageViewOptionTransitionScaleDissolve:
         case WTURLImageViewOptionTransitionPerspectiveDissolve:
         {
             switch (effect) {
                 default:
-                case WTURLImageViewOptionTransitionCrossDissolve:
-                    break;
+                //case WTURLImageViewOptionTransitionCrossDissolve:
+                //    break;
                 case WTURLImageViewOptionTransitionScaleDissolve:
                     layer.affineTransform = CGAffineTransformMakeScale(1.5, 1.5); break;
                 case WTURLImageViewOptionTransitionPerspectiveDissolve:
@@ -350,6 +358,17 @@ diskCacheTimeoutInterval:preset.diskCacheTimeInterval];
         case WTURLImageViewOptionTransitionSlideInBottom:
         case WTURLImageViewOptionTransitionSlideInRight:
         {
+            /*
+            [UIView beginAnimations:nil context:nil];
+            [UIView setAnimationCurve:UIViewAnimationCurveEaseOut];
+            [UIView setAnimationBeginsFromCurrentState:YES];
+            [UIView setAnimationDuration:0.45f];
+            [UIView setAnimationTransition:UIViewAnimationTransitionFlipFromLeft forView:self cache:YES];
+            self.image = image;
+            [UIView commitAnimations];
+            break;
+            */
+            
             // have sublayer means animation in progress
             NSArray *sublayer = self.layer.sublayers;
             BOOL clipsToBoundsSave = NO;
