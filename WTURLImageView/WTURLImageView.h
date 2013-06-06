@@ -13,25 +13,38 @@
 #define UIImageResizeFillTypeNoResize (99)
 
 typedef NS_OPTIONS(NSUInteger, WTURLImageViewOptions) {
-    WTURLImageViewOptionDontUseDiskCache = 1 << 0,  // dont use disk cache
-    WTURLImageViewOptionDontUseConnectionCache = 1 << 1,  // dont use system wide cache
-    WTURLImageViewOptionDontUseCache = (WTURLImageViewOptionDontUseDiskCache | WTURLImageViewOptionDontUseConnectionCache),
-    WTURLImageViewOptionDontSaveDiskCache = 1 << 2, // dont save to disk cache
-    WTURLImageViewOptionShowActivityIndicator = 1 << 3, // show activity indicator when loading
-    WTURLImageViewOptionAnimateEvenCache = 1 << 4,      // by default no animation for cache image, force if set this
-    WTURLImageViewOptionDontClearImageBeforeLoading = 1 << 5,    // will not clear old image when loading
+    WTURLImageViewOptionDontUseDiskCache            = 1 << 0,  // dont use disk cache
+    WTURLImageViewOptionDontUseConnectionCache      = 1 << 1,  // dont use system wide cache
+    WTURLImageViewOptionDontUseCache                = (WTURLImageViewOptionDontUseDiskCache | WTURLImageViewOptionDontUseConnectionCache),
+    WTURLImageViewOptionDontSaveDiskCache           = 1 << 2, // dont save to disk cache
+    WTURLImageViewOptionShowActivityIndicator       = 1 << 3, // show activity indicator when loading
+    WTURLImageViewOptionAnimateEvenCache            = 1 << 4, // by default no animation for cache image, force if set this
+    WTURLImageViewOptionDontClearImageBeforeLoading = 1 << 5, // will not clear old image when loading
     // load disk image in background, sometimes when you load image in table view cell, loading image
     // in foreground will also make the scrolling not smooth, set this to load disk cache in background
-    WTURLImageViewOptionsLoadDiskCacheInBackground = 1 << 6,
+    WTURLImageViewOptionsLoadDiskCacheInBackground  = 1 << 6,
+    
     // transition effects
-    WTURLImageViewOptionTransitionNone            = 0 << 20, // default
-    WTURLImageViewOptionTransitionCrossDissolve   = 1 << 20,
-    WTURLImageViewOptionTransitionScaleDissolve   = 2 << 20,
+    WTURLImageViewOptionTransitionNone              = 0 << 20, // default
+    WTURLImageViewOptionTransitionCrossDissolve     = 1 << 20,
+    
+    WTURLImageViewOptionTransitionScaleDissolve     = 2 << 20,
     WTURLImageViewOptionTransitionPerspectiveDissolve  = 3 << 20,
-    WTURLImageViewOptionTransitionSlideInTop      = 4 << 20,
-    WTURLImageViewOptionTransitionSlideInLeft     = 5 << 20,
-    WTURLImageViewOptionTransitionSlideInBottom   = 6 << 20,
-    WTURLImageViewOptionTransitionSlideInRight    = 7 << 20,
+    
+    WTURLImageViewOptionTransitionSlideInTop        = 4 << 20,
+    WTURLImageViewOptionTransitionSlideInLeft       = 5 << 20,
+    WTURLImageViewOptionTransitionSlideInBottom     = 6 << 20,
+    WTURLImageViewOptionTransitionSlideInRight      = 7 << 20,
+    
+    WTURLImageViewOptionTransitionFlipFromLeft      = 8 << 20,
+    WTURLImageViewOptionTransitionFlipFromRight     = 9 << 20,
+
+    WTURLImageViewOptionTransitionRipple            = 10 << 20,
+    WTURLImageViewOptionTransitionCubeFromTop       = 11 << 20,
+    WTURLImageViewOptionTransitionCubeFromLeft      = 12 << 20,
+    WTURLImageViewOptionTransitionCubeFromBottom    = 13 << 20,
+    WTURLImageViewOptionTransitionCubeFromRight     = 14 << 20,
+    
 };
 
 @class WTURLImageView;

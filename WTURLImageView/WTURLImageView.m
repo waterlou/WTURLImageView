@@ -16,6 +16,8 @@
 static NSTimeInterval defaultTimeoutInterval = 60;  // default time out at 60 seconds
 static NSTimeInterval defaultDiskCacheTimeoutInterval = 86400;
 
+static CGFloat transitionDuration = 0.45f;
+
 @interface WTURLImageView()
 
 @property (nonatomic, strong) AFHTTPRequestOperation *requestOperation;
@@ -96,8 +98,10 @@ static NSTimeInterval defaultDiskCacheTimeoutInterval = 86400;
 
 - (void) beginLoadImage : (WTURLImageViewOptions) options placeHolderImage : (UIImage*) placeHolderImage
 {
-    if (!(options & WTURLImageViewOptionDontClearImageBeforeLoading) || self.image==nil)
+    if (!(options & WTURLImageViewOptionDontClearImageBeforeLoading) || self.image==nil) {
+        [self.layer removeAllAnimations];   // cancel all animation before setting placeholder
         self.image = placeHolderImage;
+    }
     if (options & WTURLImageViewOptionShowActivityIndicator) {
         UIActivityIndicatorView *aiv = [self activityIndicator];
         [self bringSubviewToFront: aiv];
@@ -144,7 +148,6 @@ diskCacheTimeoutInterval:(NSTimeInterval)diskCacheTimeInterval  // set to 0 will
               success:(void (^)(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image))success
               failure:(void (^)(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error))failure
 {
-    [self.layer removeAllAnimations];   // cancel all animation before loading
     [self cancelImageRequestOperation];
     
     self.urlString = urlRequest.URL.absoluteString; // record urlstring for reload
@@ -305,7 +308,7 @@ diskCacheTimeoutInterval:preset.diskCacheTimeInterval];
 
 #pragma transitions
 
-- (void) makeTransition : (UIImage *)image effect : (UIViewAnimationOptions) effect
+- (void) makeTransition : (UIImage *)image effect : (WTURLImageViewOptions) effect
 {
     CALayer *layer = [CALayer layer];
     layer.contents = (__bridge id)([image normalizeOrientation].CGImage);
@@ -313,11 +316,31 @@ diskCacheTimeoutInterval:preset.diskCacheTimeInterval];
     
     switch (effect) {
         case WTURLImageViewOptionTransitionCrossDissolve:
+        case WTURLImageViewOptionTransitionRipple:
+        case WTURLImageViewOptionTransitionCubeFromRight:
+        case WTURLImageViewOptionTransitionCubeFromLeft:
+        case WTURLImageViewOptionTransitionCubeFromTop:
+        case WTURLImageViewOptionTransitionCubeFromBottom:
         {
             CATransition *animation = [CATransition animation];
-            [animation setDuration:0.45f];
-            [animation setType:kCATransitionFade];
-            [self.layer addAnimation:animation forKey:@"fade"];
+            [animation setDuration:transitionDuration];
+            //[animation setSubtype:kCATransitionFromLeft];
+            //rippleEffect, cube, oglFlip...
+            switch (effect) {
+                default:
+                    [animation setType:kCATransitionFade]; break;
+                case WTURLImageViewOptionTransitionCubeFromTop:
+                    [animation setType:@"cube"]; [animation setSubtype:kCATransitionFromTop]; break;
+                case WTURLImageViewOptionTransitionCubeFromBottom:
+                    [animation setType:@"cube"]; [animation setSubtype:kCATransitionFromBottom]; break;
+                case WTURLImageViewOptionTransitionCubeFromLeft:
+                    [animation setType:@"cube"]; [animation setSubtype:kCATransitionFromLeft]; break;
+                case WTURLImageViewOptionTransitionCubeFromRight:
+                    [animation setType:@"cube"]; [animation setSubtype:kCATransitionFromRight]; break;
+                case WTURLImageViewOptionTransitionRipple:
+                    [animation setType:@"rippleEffect"]; break;
+            }
+            [self.layer addAnimation:animation forKey:@"transition"];
             self.image = image;
         } break;
         case WTURLImageViewOptionTransitionScaleDissolve:
@@ -343,7 +366,7 @@ diskCacheTimeoutInterval:preset.diskCacheTimeInterval];
             [self.layer addSublayer: layer];
             [CATransaction flush];
             [CATransaction begin];
-            [CATransaction setAnimationDuration: 0.45f];
+            [CATransaction setAnimationDuration: transitionDuration];
             [CATransaction setCompletionBlock: ^ {
                 [layer removeFromSuperlayer];
                 self.image = image;
@@ -358,17 +381,6 @@ diskCacheTimeoutInterval:preset.diskCacheTimeInterval];
         case WTURLImageViewOptionTransitionSlideInBottom:
         case WTURLImageViewOptionTransitionSlideInRight:
         {
-            /*
-            [UIView beginAnimations:nil context:nil];
-            [UIView setAnimationCurve:UIViewAnimationCurveEaseOut];
-            [UIView setAnimationBeginsFromCurrentState:YES];
-            [UIView setAnimationDuration:0.45f];
-            [UIView setAnimationTransition:UIViewAnimationTransitionFlipFromLeft forView:self cache:YES];
-            self.image = image;
-            [UIView commitAnimations];
-            break;
-            */
-            
             // have sublayer means animation in progress
             NSArray *sublayer = self.layer.sublayers;
             BOOL clipsToBoundsSave = NO;
@@ -390,7 +402,7 @@ diskCacheTimeoutInterval:preset.diskCacheTimeInterval];
             [self.layer addSublayer: layer];
             [CATransaction flush];
             [CATransaction begin];
-            [CATransaction setAnimationDuration: 0.45f];
+            [CATransaction setAnimationDuration: transitionDuration];
             [CATransaction setCompletionBlock: ^ {
                 [layer removeFromSuperlayer];
                 self.image = image;
@@ -400,6 +412,25 @@ diskCacheTimeoutInterval:preset.diskCacheTimeInterval];
             }];
             layer.affineTransform = CGAffineTransformIdentity;
             [CATransaction commit];
+        } break;
+        case WTURLImageViewOptionTransitionFlipFromLeft:
+        case WTURLImageViewOptionTransitionFlipFromRight:
+        {
+            [UIView beginAnimations:nil context:nil];
+            [UIView setAnimationCurve:UIViewAnimationCurveEaseOut];
+            [UIView setAnimationBeginsFromCurrentState:YES];
+            [UIView setAnimationDuration:transitionDuration];
+            switch (effect) {
+                case WTURLImageViewOptionTransitionFlipFromLeft:
+                    [UIView setAnimationTransition:UIViewAnimationTransitionFlipFromLeft forView:self cache:YES]; break;
+                case WTURLImageViewOptionTransitionFlipFromRight:
+                    [UIView setAnimationTransition:UIViewAnimationTransitionFlipFromRight forView:self cache:YES]; break;
+                default:
+                    break;
+            }
+            self.image = image;
+            [UIView commitAnimations];
+            break;
         } break;
         default:
             break;
