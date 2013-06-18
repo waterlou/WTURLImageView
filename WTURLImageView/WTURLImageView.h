@@ -55,7 +55,6 @@ typedef NS_OPTIONS(NSUInteger, WTURLImageViewOptions) {
 - (void) URLImageViewDidClicked : (WTURLImageView*)imageView;
 @end
 
-
 @interface WTURLImageView : UIImageView
 
 - (void)setURLRequest:(NSURLRequest *)urlRequest

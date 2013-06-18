@@ -308,13 +308,18 @@ diskCacheTimeoutInterval:preset.diskCacheTimeInterval];
 
 #pragma transitions
 
-- (void) makeTransition : (UIImage *)image effect : (WTURLImageViewOptions) effect
+- (CALayer*) layerFromImage : (UIImage*) image
 {
     CALayer *layer = [CALayer layer];
     layer.contents = (__bridge id)([image normalizeOrientation].CGImage);
     layer.frame = self.bounds;
-    
+    return layer;
+}
+
+- (void) makeTransition : (UIImage *)image effect : (WTURLImageViewOptions) effect
+{    
     switch (effect) {
+        // OS-provided CALayer CATranstion type transition animation
         case WTURLImageViewOptionTransitionCrossDissolve:
         case WTURLImageViewOptionTransitionRipple:
         case WTURLImageViewOptionTransitionCubeFromRight:
@@ -343,9 +348,11 @@ diskCacheTimeoutInterval:preset.diskCacheTimeInterval];
             [self.layer addAnimation:animation forKey:@"transition"];
             self.image = image;
         } break;
+        // Custom dissolve type animation
         case WTURLImageViewOptionTransitionScaleDissolve:
         case WTURLImageViewOptionTransitionPerspectiveDissolve:
         {
+            CALayer *layer = [self layerFromImage:image];
             switch (effect) {
                 default:
                 //case WTURLImageViewOptionTransitionCrossDissolve:
@@ -376,11 +383,13 @@ diskCacheTimeoutInterval:preset.diskCacheTimeInterval];
             [CATransaction commit];
 
         } break;
+        // Custom slide type animation
         case WTURLImageViewOptionTransitionSlideInTop:
         case WTURLImageViewOptionTransitionSlideInLeft:
         case WTURLImageViewOptionTransitionSlideInBottom:
         case WTURLImageViewOptionTransitionSlideInRight:
         {
+            CALayer *layer = [self layerFromImage:image];
             // have sublayer means animation in progress
             NSArray *sublayer = self.layer.sublayers;
             BOOL clipsToBoundsSave = NO;
@@ -413,6 +422,7 @@ diskCacheTimeoutInterval:preset.diskCacheTimeInterval];
             layer.affineTransform = CGAffineTransformIdentity;
             [CATransaction commit];
         } break;
+        // OS-provided UIView type transition animation
         case WTURLImageViewOptionTransitionFlipFromLeft:
         case WTURLImageViewOptionTransitionFlipFromRight:
         {
