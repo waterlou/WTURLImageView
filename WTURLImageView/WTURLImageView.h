@@ -55,6 +55,13 @@ typedef NS_OPTIONS(NSUInteger, WTURLImageViewOptions) {
 - (void) URLImageViewDidClicked : (WTURLImageView*)imageView;
 @end
 
+
+@interface UIImageView(WTURLImageView)
+
+- (void) wt_makeTransition : (UIImage *)image effect : (WTURLImageViewOptions) effect;
+
+@end
+
 @interface WTURLImageView : UIImageView
 
 - (void)setURLRequest:(NSURLRequest *)urlRequest

@@ -21,7 +21,7 @@ static CGFloat transitionDuration = 0.45f;
 @interface WTURLImageView()
 
 @property (nonatomic, strong) AFHTTPRequestOperation *requestOperation;
-@property (nonatomic, assign) BOOL clipsToBoundsSave;   // for restore clipToBound for some transition effect
+
 @end
 
 @implementation WTURLImageView
@@ -127,7 +127,7 @@ static CGFloat transitionDuration = 0.45f;
         return;
     }
     
-    UIViewAnimationOptions effect = options & (0x0000f<<20);
+    WTURLImageViewOptions effect = options & (0x0000f<<20);
     // scale image
     image = [self resizedImage:image fillType:fillType];
     if ((fromCache && !(options & WTURLImageViewOptionAnimateEvenCache)) || effect==UIViewAnimationOptionTransitionNone) {
@@ -135,7 +135,7 @@ static CGFloat transitionDuration = 0.45f;
     }
     else {
         // show image with animation
-        [self makeTransition: image effect:effect];
+        [self wt_makeTransition: image effect:effect];
     }
 }
 
@@ -306,9 +306,31 @@ diskCacheTimeoutInterval:preset.diskCacheTimeInterval];
     [self setHighlighted: CGRectContainsPoint(self.bounds,pt)];
 }
 
+#pragma global helper
+
++ (void) setMaxConcurrentDownload : (NSInteger) c
+{
+    [[[self class] sharedImageRequestOperationQueue] setMaxConcurrentOperationCount: c];
+}
+
++ (void) clearAllCache
+{
+    [[[self class] sharedImageCache] clearCache];
+}
+
++ (void) setDiskCacheDefaultTimeOutInterval : (NSTimeInterval) timeout
+{
+    [[[self class] sharedImageCache] setDefaultTimeoutInterval: timeout];
+}
+
+@end
+
+
+@implementation UIImageView(WTURLImageView)
+
 #pragma transitions
 
-- (CALayer*) layerFromImage : (UIImage*) image
+- (CALayer*) wt_layerFromImage : (UIImage*) image
 {
     CALayer *layer = [CALayer layer];
     layer.contents = (__bridge id)([image normalizeOrientation].CGImage);
@@ -316,10 +338,10 @@ diskCacheTimeoutInterval:preset.diskCacheTimeInterval];
     return layer;
 }
 
-- (void) makeTransition : (UIImage *)image effect : (WTURLImageViewOptions) effect
-{    
+- (void) wt_makeTransition : (UIImage *)image effect : (WTURLImageViewOptions) effect
+{
     switch (effect) {
-        // OS-provided CALayer CATranstion type transition animation
+            // OS-provided CALayer CATranstion type transition animation
         case WTURLImageViewOptionTransitionCrossDissolve:
         case WTURLImageViewOptionTransitionRipple:
         case WTURLImageViewOptionTransitionCubeFromRight:
@@ -348,15 +370,15 @@ diskCacheTimeoutInterval:preset.diskCacheTimeInterval];
             [self.layer addAnimation:animation forKey:@"transition"];
             self.image = image;
         } break;
-        // Custom dissolve type animation
+            // Custom dissolve type animation
         case WTURLImageViewOptionTransitionScaleDissolve:
         case WTURLImageViewOptionTransitionPerspectiveDissolve:
         {
-            CALayer *layer = [self layerFromImage:image];
+            CALayer *layer = [self wt_layerFromImage:image];
             switch (effect) {
                 default:
-                //case WTURLImageViewOptionTransitionCrossDissolve:
-                //    break;
+                    //case WTURLImageViewOptionTransitionCrossDissolve:
+                    //    break;
                 case WTURLImageViewOptionTransitionScaleDissolve:
                     layer.affineTransform = CGAffineTransformMakeScale(1.5, 1.5); break;
                 case WTURLImageViewOptionTransitionPerspectiveDissolve:
@@ -381,20 +403,16 @@ diskCacheTimeoutInterval:preset.diskCacheTimeInterval];
             layer.opacity = 1.0f;
             layer.affineTransform = CGAffineTransformIdentity;
             [CATransaction commit];
-
+            
         } break;
-        // Custom slide type animation
+            // Custom slide type animation
         case WTURLImageViewOptionTransitionSlideInTop:
         case WTURLImageViewOptionTransitionSlideInLeft:
         case WTURLImageViewOptionTransitionSlideInBottom:
         case WTURLImageViewOptionTransitionSlideInRight:
         {
-            CALayer *layer = [self layerFromImage:image];
-            // have sublayer means animation in progress
-            NSArray *sublayer = self.layer.sublayers;
-            BOOL clipsToBoundsSave = NO;
-            if (sublayer.count==1)
-                self.clipsToBoundsSave = self.clipsToBounds;
+            CALayer *layer = [self wt_layerFromImage:image];
+            BOOL clipsToBoundsSave = self.clipsToBounds;
             self.clipsToBounds = YES;
             switch (effect) {
                 default:
@@ -415,6 +433,7 @@ diskCacheTimeoutInterval:preset.diskCacheTimeInterval];
             [CATransaction setCompletionBlock: ^ {
                 [layer removeFromSuperlayer];
                 self.image = image;
+                // have sublayer means animation in progress
                 NSArray *sublayer = self.layer.sublayers;
                 if (sublayer.count==1)
                     self.clipsToBounds = clipsToBoundsSave;
@@ -422,7 +441,7 @@ diskCacheTimeoutInterval:preset.diskCacheTimeInterval];
             layer.affineTransform = CGAffineTransformIdentity;
             [CATransaction commit];
         } break;
-        // OS-provided UIView type transition animation
+            // OS-provided UIView type transition animation
         case WTURLImageViewOptionTransitionFlipFromLeft:
         case WTURLImageViewOptionTransitionFlipFromRight:
         {
@@ -445,23 +464,6 @@ diskCacheTimeoutInterval:preset.diskCacheTimeInterval];
         default:
             break;
     }
-}
-
-#pragma global helper
-
-+ (void) setMaxConcurrentDownload : (NSInteger) c
-{
-    [[[self class] sharedImageRequestOperationQueue] setMaxConcurrentOperationCount: c];
-}
-
-+ (void) clearAllCache
-{
-    [[[self class] sharedImageCache] clearCache];
-}
-
-+ (void) setDiskCacheDefaultTimeOutInterval : (NSTimeInterval) timeout
-{
-    [[[self class] sharedImageCache] setDefaultTimeoutInterval: timeout];
 }
 
 @end
