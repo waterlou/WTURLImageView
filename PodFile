@@ -2,5 +2,5 @@ platform :ios, '5.0'
 
 pod 'AFNetworking', '~>1.0'
 pod 'GVCache', '~>1.0'
-pod 'WTExtension/UIImage+WTExtension', '~>1.0.0'
+pod 'WTExtension/UIImage+WTExtension', '~>1.2.0'
 

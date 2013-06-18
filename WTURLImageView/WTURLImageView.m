@@ -33,7 +33,7 @@ static CGFloat transitionDuration = 0.45f;
         return image;
     }
     if (fillType!=UIImageResizeFillTypeNoResize)
-        return [image resize:self.bounds.size fillType:fillType topLeftCorner:0 topRightCorner:0 bottomRightCorner:0 bottomLeftCorner:0 quality:kCGInterpolationDefault];
+        return [image wt_resize:self.bounds.size fillType:fillType topLeftCorner:0 topRightCorner:0 bottomRightCorner:0 bottomLeftCorner:0 quality:kCGInterpolationDefault];
     else
         return image;
 }
@@ -333,7 +333,7 @@ diskCacheTimeoutInterval:preset.diskCacheTimeInterval];
 - (CALayer*) wt_layerFromImage : (UIImage*) image
 {
     CALayer *layer = [CALayer layer];
-    layer.contents = (__bridge id)([image normalizeOrientation].CGImage);
+    layer.contents = (__bridge id)([image wt_normalizeOrientation].CGImage);
     layer.frame = self.bounds;
     return layer;
 }
