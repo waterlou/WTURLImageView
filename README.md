@@ -75,6 +75,10 @@ Check the sample code for details.
 	cd WTURLImageView	
 	pod install	
 	open WTURLImageViewDemo.xcworkspace
+
+## AFNetworking 1.x and 2.x
+
+If you are using AFNetworking 1.x, please use 1.x version of the source.  If you are using AFNetworking 2.x, please use 2.x version.  Note that AFNetworking 2.x can only support iOS 6.0 or above.
 	
 ## License
 
