@@ -194,9 +194,8 @@ diskCacheTimeoutInterval:(NSTimeInterval)diskCacheTimeInterval  // set to 0 will
         }
     }
     
-    [self beginLoadImage:options placeHolderImage:placeholderImage];
-    
-    AFImageRequestOperation *requestOperation = [[AFImageRequestOperation alloc] initWithRequest:urlRequest];
+    AFHTTPRequestOperation *requestOperation = [[AFHTTPRequestOperation alloc] initWithRequest:urlRequest];
+    requestOperation.responseSerializer = [AFImageResponseSerializer serializer];
     [requestOperation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
         if ([[urlRequest URL] isEqual:[[self.requestOperation request] URL]]) {
             [self endLoadImage:responseObject fromCache:NO fillType:fillType options:options failedImage:failedImage];
