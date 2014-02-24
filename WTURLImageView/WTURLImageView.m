@@ -32,7 +32,7 @@ static CGFloat transitionDuration = 0.45f;
         // no need to resize
         return image;
     }
-    if (fillType!=UIImageResizeFillTypeNoResize)
+    if (fillType!=(UIImageResizeFillType)UIImageResizeFillTypeNoResize)
         return [image wt_resize:self.bounds.size fillType:fillType topLeftCorner:0 topRightCorner:0 bottomRightCorner:0 bottomLeftCorner:0 quality:kCGInterpolationDefault];
     else
         return image;
