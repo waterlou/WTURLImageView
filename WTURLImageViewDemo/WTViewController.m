@@ -44,7 +44,7 @@
                          ];
     static int index = 0;
     if (sender!=nil)
-        index = ++index % 5;
+        index = (index+1) % 5;
     [self.imageView setURL: [NSURL URLWithString:images[index]] withPreset:[WTURLImageViewPreset defaultPreset]];
 }
 
