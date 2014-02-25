@@ -9,7 +9,7 @@
 #import <QuartzCore/QuartzCore.h>
 #import "WTURLImageView.h"
 #import "AFNetworking.h"
-#import "GVCache.h"
+#import "EGOCache.h"
 
 #define kAIVTag 2222    // activity indicator tag
 
@@ -38,12 +38,12 @@ static CGFloat transitionDuration = 0.45f;
         return image;
 }
 
-+ (GVCache *) sharedImageCache {
-    static GVCache *sharedCache = nil;
++ (EGOCache *) sharedImageCache {
+    static EGOCache *sharedCache = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         NSString *path = [NSTemporaryDirectory() stringByAppendingPathComponent: @"WTLURLImageView"];
-        sharedCache = [[GVCache alloc] initWithCacheDirectory:path];
+        sharedCache = [[EGOCache alloc] initWithCacheDirectory:path];
         [sharedCache setDefaultTimeoutInterval: defaultDiskCacheTimeoutInterval];
     });
     
@@ -156,7 +156,7 @@ diskCacheTimeoutInterval:(NSTimeInterval)diskCacheTimeInterval  // set to 0 will
     if (!(options & WTURLImageViewOptionDontUseDiskCache)) {
         if (options & WTURLImageViewOptionsLoadDiskCacheInBackground)
         {
-            GVCache *cache = [[self class] sharedImageCache];
+            EGOCache *cache = [[self class] sharedImageCache];
             if ([cache hasCacheForKey: cacheKey])
             {
                 [self beginLoadImage:options placeHolderImage:placeholderImage];
@@ -201,7 +201,7 @@ diskCacheTimeoutInterval:(NSTimeInterval)diskCacheTimeInterval  // set to 0 will
             [self endLoadImage:responseObject fromCache:NO fillType:fillType options:options failedImage:failedImage];
             if (success) success(operation.request, operation.response, responseObject);
             if (!(options & WTURLImageViewOptionDontSaveDiskCache)) {
-                GVCache *cache = [[self class] sharedImageCache];
+                EGOCache *cache = [[self class] sharedImageCache];
                 [cache setImage:responseObject forKey:cacheKey];
                 if (diskCacheTimeInterval>0) {
                     [cache setImage:responseObject forKey:cacheKey withTimeoutInterval:diskCacheTimeInterval];
