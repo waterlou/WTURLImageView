@@ -10,7 +10,7 @@
 #import "UIImage+WTExtension.h"
 
 // default fillType, will not resize image, user can set aspect ratio of the image using view contentMode
-#define UIImageResizeFillTypeNoResize (99)
+#define UIImageResizeFillTypeNoResize ((UIImageResizeFillType)(16))
 
 typedef NS_OPTIONS(NSUInteger, WTURLImageViewOptions) {
     WTURLImageViewOptionDontUseDiskCache            = 1 << 0,  // dont use disk cache
