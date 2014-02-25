@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name          = 'WTURLImageView'
-  s.version       = '2.0'
+  s.version       = '2.0.1'
   s.summary       = 'UIImageView that get image using AFNetworking with various features.'
   s.homepage      = 'http://www.waterworld.com.hk'
   s.license       = { :type => 'MIT', :file => 'LICENSE.md' }
@@ -14,7 +14,7 @@ Pod::Spec.new do |s|
   s.source_files  = 'WTURLImageView/*.{h,m}'
 
   s.dependency 'AFNetworking', '~> 2.0'
-  s.dependency 'GVCache', '~> 1.0'
+  s.dependency 'EGOCache', '~> 2.0'
   s.dependency 'WTExtension/UIImage+WTExtension', '>=1.2.0'
 
 end
