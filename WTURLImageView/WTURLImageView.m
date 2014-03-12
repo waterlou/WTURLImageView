@@ -203,7 +203,6 @@ diskCacheTimeoutInterval:(NSTimeInterval)diskCacheTimeInterval  // set to 0 will
             if (success) success(operation.request, operation.response, responseObject);
             if (!(options & WTURLImageViewOptionDontSaveDiskCache)) {
                 EGOCache *cache = [[self class] sharedImageCache];
-                [cache setImage:responseObject forKey:cacheKey];
                 if (diskCacheTimeInterval>0) {
                     [cache setImage:responseObject forKey:cacheKey withTimeoutInterval:diskCacheTimeInterval];
                 }
