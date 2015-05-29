@@ -9,7 +9,8 @@
 #import <QuartzCore/QuartzCore.h>
 #import "WTURLImageView.h"
 #import "AFNetworking.h"
-#import "EGOCache.h"
+#import "PINCache.h"
+
 
 #define kAIVTag 2222    // activity indicator tag
 
@@ -38,22 +39,22 @@ static CGFloat transitionDuration = 0.45f;
         return image;
 }
 
-+ (EGOCache *) sharedImageCache {
-    static EGOCache *sharedCache = nil;
++ (PINCache *)sharedCache {
+    static PINCache *sharedCache = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        NSString *path = [NSTemporaryDirectory() stringByAppendingPathComponent: @"WTLURLImageView"];
-        sharedCache = [[EGOCache alloc] initWithCacheDirectory:path];
-        [sharedCache setDefaultTimeoutInterval: defaultDiskCacheTimeoutInterval];
+        sharedCache = [[PINCache alloc] initWithName:@"WTURLImageView"];
+        sharedCache.memoryCache.costLimit = 32; // max number of image cached in memory
+        sharedCache.memoryCache.ageLimit = defaultDiskCacheTimeoutInterval;
+        sharedCache.diskCache.ageLimit = defaultDiskCacheTimeoutInterval;
     });
-    
     return sharedCache;
 }
 
 + (UIImage*) getCachedImageByUrlString : (NSString*) urlString
 {
     NSString *cacheKey = [[self class] sanitizeFileNameString: urlString];
-    return [[[self class] sharedImageCache] imageForKey:cacheKey];
+    return [[[self class] sharedCache] objectForKey:cacheKey];
 }
 
 + (NSOperationQueue *) sharedImageRequestOperationQueue {
@@ -139,75 +140,25 @@ static CGFloat transitionDuration = 0.45f;
     }
 }
 
-- (void)setURLRequest:(NSURLRequest *)urlRequest
-             fillType:(UIImageResizeFillType)fillType
-              options:(WTURLImageViewOptions)options
-     placeholderImage:(UIImage *)placeholderImage
-          failedImage:(UIImage *)failedImage
-diskCacheTimeoutInterval:(NSTimeInterval)diskCacheTimeInterval  // set to 0 will use default one
-              success:(void (^)(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image))success
-              failure:(void (^)(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error))failure
+- (void)createRequestOperation:(NSURLRequest *)urlRequest
+                      cacheKey:(NSString*)cacheKey
+                      fillType:(UIImageResizeFillType)fillType
+                       options:(WTURLImageViewOptions)options
+              placeholderImage:(UIImage *)placeholderImage
+                   failedImage:(UIImage *)failedImage
+      diskCacheTimeoutInterval:(NSTimeInterval)diskCacheTimeInterval  // set to 0 will use default one
+                       success:(void (^)(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image))success
+                       failure:(void (^)(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error))failure
 {
-    [self cancelImageRequestOperation];
-    
-    self.urlString = urlRequest.URL.absoluteString; // record urlstring for reload
-    NSString *cacheKey = [[self class] sanitizeFileNameString: self.urlString];
-    
-    if (!(options & WTURLImageViewOptionDontUseDiskCache)) {
-        if (options & WTURLImageViewOptionsLoadDiskCacheInBackground)
-        {
-            EGOCache *cache = [[self class] sharedImageCache];
-            if ([cache hasCacheForKey: cacheKey])
-            {
-                [self beginLoadImage:options placeHolderImage:placeholderImage];
-                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                    UIImage *cachedImage = [cache imageForKey:cacheKey];
-                    if (cachedImage) {
-                        dispatch_async(dispatch_get_main_queue(),^{
-                            [self endLoadImage:cachedImage fromCache:YES fillType:fillType options:options failedImage:failedImage];
-                            if (success) success(nil, nil, cachedImage);
-                            self.requestOperation = nil;
-                        });
-                    }
-                });
-                return;
-            }
-        }
-        else
-        {
-            UIImage *cachedImage = [[[self class] sharedImageCache] imageForKey:cacheKey];
-            if (cachedImage) {
-                if (options & WTURLImageViewOptionAnimateEvenCache) {
-                    [self beginLoadImage:options placeHolderImage:placeholderImage];
-                    dispatch_async(dispatch_get_main_queue(),^{
-                        // perform animation at another tick otherwise will not take effect
-                        [self endLoadImage:cachedImage fromCache:YES fillType:fillType options:options failedImage:failedImage];
-                    });
-                }
-                else {
-                    [self endLoadImage:cachedImage fromCache:YES fillType:fillType options:options failedImage:failedImage];
-                }
-                if (success) success(nil, nil, cachedImage);
-                self.requestOperation = nil;
-                return;
-            }
-        }
-    }
-    
     AFHTTPRequestOperation *requestOperation = [[AFHTTPRequestOperation alloc] initWithRequest:urlRequest];
     requestOperation.responseSerializer = [AFImageResponseSerializer serializer];
     [requestOperation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
         if ([[urlRequest URL] isEqual:[[self.requestOperation request] URL]]) {
             [self endLoadImage:responseObject fromCache:NO fillType:fillType options:options failedImage:failedImage];
             if (success) success(operation.request, operation.response, responseObject);
-            if (!(options & WTURLImageViewOptionDontSaveDiskCache)) {
-                EGOCache *cache = [[self class] sharedImageCache];
-                if (diskCacheTimeInterval>0) {
-                    [cache setImage:responseObject forKey:cacheKey withTimeoutInterval:diskCacheTimeInterval];
-                }
-                else {
-                    [cache setImage:responseObject forKey:cacheKey];
-                }
+            if (!(options & WTURLImageViewOptionDontUseDiskCache)) {
+                PINCache *diskCache = [[self class] sharedCache];
+                [diskCache setObject:responseObject forKey:cacheKey];
             }
             self.requestOperation = nil;
         }
@@ -221,6 +172,7 @@ diskCacheTimeoutInterval:(NSTimeInterval)diskCacheTimeInterval  // set to 0 will
             self.requestOperation = nil;
         }
     }];
+    // network level cache
     if (options & WTURLImageViewOptionDontUseConnectionCache) {
         [requestOperation setCacheResponseBlock:^NSCachedURLResponse *(NSURLConnection *connection, NSCachedURLResponse *cachedResponse) {
             // we also disable cache in afnetworking
@@ -230,6 +182,42 @@ diskCacheTimeoutInterval:(NSTimeInterval)diskCacheTimeInterval  // set to 0 will
     
     self.requestOperation = requestOperation;
     [[[self class] sharedImageRequestOperationQueue] addOperation:self.requestOperation];
+}
+
+- (void)setURLRequest:(NSURLRequest *)urlRequest
+             fillType:(UIImageResizeFillType)fillType
+              options:(WTURLImageViewOptions)options
+     placeholderImage:(UIImage *)placeholderImage
+          failedImage:(UIImage *)failedImage
+diskCacheTimeoutInterval:(NSTimeInterval)diskCacheTimeInterval  // set to 0 will use default one
+              success:(void (^)(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image))success
+              failure:(void (^)(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error))failure
+{
+    [self cancelImageRequestOperation];
+    
+    self.urlString = urlRequest.URL.absoluteString; // record urlstring for reload
+    NSString *cacheKey = [[self class] sanitizeFileNameString: self.urlString];
+
+    [self beginLoadImage:options placeHolderImage:placeholderImage];
+    if (!(options & WTURLImageViewOptionDontUseDiskCache)) {
+        PINCache *cache = [[self class] sharedCache];
+        [cache objectForKey:cacheKey block:^(PINCache *cache, NSString *key, id object) {
+            UIImage *cachedImage = (UIImage *)object;
+            if (cachedImage) {
+                dispatch_async(dispatch_get_main_queue(),^{
+                    [self endLoadImage:cachedImage fromCache:YES fillType:fillType options:options failedImage:failedImage];
+                    if (success) success(nil, nil, cachedImage);
+                    self.requestOperation = nil;
+                });
+            }
+            else {
+                [self createRequestOperation:urlRequest cacheKey:cacheKey fillType:fillType options:options placeholderImage:placeholderImage failedImage:failedImage diskCacheTimeoutInterval:diskCacheTimeInterval success:success failure:failure];
+            }
+        }];
+    }
+    else {
+        [self createRequestOperation:urlRequest cacheKey:cacheKey fillType:fillType options:options placeholderImage:placeholderImage failedImage:failedImage diskCacheTimeoutInterval:diskCacheTimeInterval success:success failure:failure];
+    }
 }
 
 - (void)setURL:(NSURL *)url
@@ -313,12 +301,13 @@ diskCacheTimeoutInterval:preset.diskCacheTimeInterval];
 
 + (void) clearAllCache
 {
-    [[[self class] sharedImageCache] clearCache];
+    [[[self class] sharedCache] removeAllObjects];
 }
 
 + (void) setDiskCacheDefaultTimeOutInterval : (NSTimeInterval) timeout
 {
-    [[[self class] sharedImageCache] setDefaultTimeoutInterval: timeout];
+    [[[self class] sharedCache].memoryCache setAgeLimit:timeout];
+    [[[self class] sharedCache].diskCache setAgeLimit:timeout];
 }
 
 @end
